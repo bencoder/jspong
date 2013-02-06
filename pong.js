@@ -16,6 +16,34 @@ PaddleObj.prototype.render = function(ctx) {
 	ctx.fillRect (this.position.x-this.width/2, this.position.y-this.height/2, this.width, this.height);
 }
 
+PaddleObj.prototype.setYPosition = function(y_pos) {
+	this.position.y = y_pos;
+	if ((this.position.y - this.height/2) < 0) 
+		this.position.y = this.height/2;
+	if ((this.position.y + this.height/2) > this.game.height)
+		this.position.y = this.game.height - this.height/2;
+}
+
+PaddleObj.prototype.update = function(delta_time) {
+	//don't do anything on update by default
+}
+
+AIPaddleObj = function() { 
+	this.speed = 100;
+};
+
+AIPaddleObj.prototype = PaddleObj.prototype;
+AIPaddleObj.constructor = AIPaddleObj;
+
+AIPaddleObj.prototype.update = function(delta_time) {
+	if (this.game.ball.position.y < this.position.y) {
+		this.setYPosition(this.position.y -= this.speed * delta_time);
+	}
+	if (this.game.ball.position.y > this.position.y) {
+		this.setYPosition(this.position.y += this.speed * delta_time);
+	}
+}
+
 
 
 
@@ -78,10 +106,18 @@ GameObj.prototype.init = function(parent, width, height) {
 	this.ball.init(this, 100, width/2, height/2);
 	this.playerPaddle = new PaddleObj();
 	this.playerPaddle.init(this, 'left');
+	this.gameCanvas.onmousemove = function(playerPaddle) {
+		return function(e) {
+			playerPaddle.setYPosition(e.offsetY || e.layerY);
+		}
+	}(this.playerPaddle);
+	this.aiPaddle = new AIPaddleObj();
+	this.aiPaddle.init(this,'right');
 }
 
 GameObj.prototype.update = function(delta_time) {
 	this.ball.update(delta_time);
+	this.aiPaddle.update(delta_time);
 }
 
 GameObj.prototype.drawFrame = function() {
@@ -90,6 +126,7 @@ GameObj.prototype.drawFrame = function() {
 	ctx.fillRect(0,0,this.gameCanvas.width,this.gameCanvas.height);
 	this.ball.render(ctx);
 	this.playerPaddle.render(ctx);
+	this.aiPaddle.render(ctx);
 }
 	
 GameObj.prototype.run = function(delta_time) {
