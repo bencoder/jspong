@@ -2,13 +2,13 @@ var PaddleObj = function() { };
 
 PaddleObj.prototype.init = function(game_object, side) {
 	this.game = game_object;
-	this.width = 10;
+	this.width = 15;
 	this.height = 100;
 
 	if (side == 'left')
-		this.position = {x:20, y:this.game.height/2};
+		this.position = {x:40, y:this.game.height/2};
 	else
-		this.position = {x:this.game.width-20, y:this.game.height/2};
+		this.position = {x:this.game.width-40, y:this.game.height/2};
 }
 
 PaddleObj.prototype.render = function(ctx) {
@@ -26,6 +26,13 @@ PaddleObj.prototype.setYPosition = function(y_pos) {
 
 PaddleObj.prototype.update = function(delta_time) {
 	//don't do anything on update by default
+}
+
+PaddleObj.prototype.isBallColliding = function(ball) {
+	return (ball.position.x < (this.position.x + this.width/2))
+		&&	(ball.position.x > (this.position.x - this.width/2))
+		&&	(ball.position.y < (this.position.y + this.height/2))
+		&&  (ball.position.y > (this.position.y - this.height/2));
 }
 
 AIPaddleObj = function() { 
@@ -56,6 +63,8 @@ BallObj.prototype.init = function(game_object, initial_speed, pos_x, pos_y) {
 }
 
 BallObj.prototype.update = function(frame_time) {
+	var previous_position = this.position;
+	
 	this.position.x += this.vector.x*frame_time;
 	this.position.y += this.vector.y*frame_time;
 	if (this.position.x > this.game.width) {
@@ -73,6 +82,11 @@ BallObj.prototype.update = function(frame_time) {
 	if (this.position.y > this.game.height) {
 		this.position.y = this.game.height;
 		this.vector.y *= -1;
+	}
+	
+	if (this.game.aiPaddle.isBallColliding(this) || this.game.playerPaddle.isBallColliding(this)) {
+		this.position = previous_position;
+		this.vector.x *= -1;
 	}
 }
 
